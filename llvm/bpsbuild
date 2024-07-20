@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+name="llvm"
+version="16.0.6"
+url="https://llvm.org"
+description="Low Level Virtual Machine"
+source="https://github.com/llvm/llvm-project/releases/download/llvmorg-$version/llvm-$version.src.tar.xz"
+
+depends="libffi,xz-utils,libxml2,zlib"
+group="sys.devel"
+
+export PYTHON=/usr/bin/python3
+
+cmake_args=(
+    -G Ninja
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_INSTALL_DOCDIR=share/doc
+    -DCMAKE_INSTALL_PREFIX=/usr
+    -DCMAKE_SKIP_RPATH=ON
+    -DLLVM_BINUTILS_INCDIR=/usr/include
+    -DLLVM_BUILD_DOCS=OFF
+    -DLLVM_BUILD_LLVM_DYLIB=ON
+    -DLLVM_BUILD_TESTS=OFF
+    -DLLVM_ENABLE_BINDINGS=OFF
+    -DLLVM_ENABLE_FFI=ON
+    -DLLVM_ENABLE_RTTI=ON
+    -DLLVM_ENABLE_SPHINX=OFF
+    -DLLVM_INCLUDE_BENCHMARKS=OFF
+    -DLLVM_INSTALL_UTILS=ON
+    -DLLVM_LINK_LLVM_DYLIB=ON
+    -DLLVM_USE_PERF=ON
+    -DLLVM_ENABLE_ZSTD=OFF
+    -DSPHINX_WARNINGS_AS_ERRORS=OFF
+)
+
+setup(){
+	cd /tmp/bps/build
+	
+    busybox wget https://github.com/llvm/llvm-project/releases/download/llvmorg-$version/cmake-$version.src.tar.xz
+    busybox wget https://github.com/llvm/llvm-project/releases/download/llvmorg-$version/third-party-$version.src.tar.xz
+    tar -xf cmake-$version.src.tar.xz
+    tar -xf third-party-$version.src.tar.xz
+    
+    cd $SOURCEDIR
+    
+    mkdir build
+    
+    mv ../cmake-$version.src ../cmake
+    mv ../third-party-$version.src ../third-party
+	
+    cd build
+    #cmake .. -B build -Wno-dev -S llvm ${cmake_args[@]}
+	cmake .. ${cmake_args[@]}
+   	#exit
+   	
+    python3 ../utils/lit/setup.py build
+
+}
+
+build(){
+	#cd build
+    ninja
+}
+
+package(){
+	cd build
+    DESTDIR=$DESTDIR ninja install
+    
+    python3 ../utils/lit/setup.py install --root="$DESTDIR"
+    
+    mkdir -p $DESTDIR/usr/lib64
+    mv $DESTDIR/usr/lib/* $DESTDIR/usr/lib64/
+	rm -rf $DESTDIR/usr/lib
+}

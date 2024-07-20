@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+name="mesa"
+version="24.0.6"
+description="An open-source implementation of the OpenGL specification"
+source="https://gitlab.freedesktop.org/mesa/mesa/-/archive/mesa-$version/mesa-mesa-$version.tar.gz"
+depends="libva,libvdpau,libdrm,llvm,glslang,elfutils,libclc,py3-mako,libglvnd,eudev,wayland,wayland-protocols,libxshmfence,libXxf86vm,libXrandr"
+group="media.libs"
+
+setup(){
+	cd $SOURCEDIR
+    meson setup $BUILDDIR --prefix=/usr \
+        -Db_ndebug=true \
+        -Db_lto=true \
+        -Dplatforms=x11,wayland \
+        -Dgallium-drivers=r300,r600,radeonsi,nouveau,virgl,svga,swrast,i915,iris,crocus,zink,d3d12 \
+        -Dvulkan-drivers=amd,intel,intel_hasvk,swrast \
+        -Dvulkan-layers=device-select,intel-nullhw,overlay \
+        -Ddri3=enabled \
+        -Degl=enabled \
+        -Dgallium-extra-hud=true \
+        -Dgallium-nine=true \
+        -Dgallium-va=enabled \
+        -Dgallium-vdpau=enabled \
+        -Dgallium-xa=enabled \
+        -Dgallium-opencl=icd \
+        -Dgbm=enabled \
+        -Dgles1=disabled \
+        -Dgles2=enabled \
+        -Dglvnd=true \
+        -Dglx=dri \
+        -Dllvm=enabled \
+        -Dosmesa=true \
+        -Dshared-glapi=enabled \
+        -Dmicrosoft-clc=disabled \
+        -Dvideo-codecs=vc1dec,h264dec,h264enc,h265dec,h265enc \
+        -Dvalgrind=disabled \
+        -Dlmsensors=disabled \
+        -Dzstd=disabled
+
+}
+
+build(){
+    ninja -C $BUILDDIR
+}
+
+package(){
+    DESTDIR=$DESTDIR ninja -C $BUILDDIR install
+}
+

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+name="moka-icon-theme"
+version="5.4.0"
+description="Moka Icon Theme"
+source="https://github.com/snwh/moka-icon-theme/archive/v$version.tar.gz"
+depends=""
+builddepend="meson"
+group="x11.themes"
+
+setup(){
+    cd $SOURCEDIR
+    meson setup $BUILDDIR \
+        --prefix=/usr \
+        --libdir=/usr/lib64
+}
+build(){
+    meson compile -C $BUILDDIR
+}
+
+package(){
+    DESTDIR="$DESTDIR" meson install -C $BUILDDIR
+}

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+name="qtcreator"
+version="13.0.2"
+description='Lightweight, cross-platform integrated development environment'
+#source="https://download.qt.io/official_releases/qtcreator/${version%.*}/$version/qt-creator-opensource-src-$version.tar.gz"
+source="https://github.com/qt-creator/qt-creator/archive/refs/tags/v$version.tar.gz"
+depends="qt6-base,qt6-declarative,qt6-quick3d,qt6-tools,qt6-serialport,qt6-svg,qt6-webengine"
+builddepend="cmake,llvm,python,qt6-5compat"
+group="dev.qt"
+
+setup () {
+	cp -prvf $PACKAGEDIR/files/ /tmp/bps/build/
+	cd $SOURCEDIR
+	patch -Np1 -i ../files/fix-execinfo.patch
+	patch -Np1 -i ../files/fix-malloc-trim.patch
+	
+	cmake -B $BUILDDIR \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib64 \
+		-DCMAKE_PREFIX_PATH=lib64/cmake \
+		-DCMAKE_INSTALL_LIBEXECDIR=lib64 \
+		-DWITH_DOCS=ON \
+		-DBUILD_DEVELOPER_DOCS=ON \
+		-DBUILD_QBS=OFF \
+		-DQTC_CLANG_BUILDMODE_MATCH=ON \
+		-DCLANGTOOLING_LINK_CLANG_DYLIB=ON \
+		-DQT_DEBUG_FIND_PACKAGE=ON
+}
+build () {
+	cmake --build $BUILDDIR
+	cmake --build $BUILDDIR --target docs
+}
+
+package () {
+	DESTDIR=$DESTDIR cmake --install $BUILDDIR
+	# Install docs
+	cp -r build/share/doc "$DESTDIR"/usr/share
+
+	DESTDIR=$DESTDIR cmake --install $BUILDDIR --component Devel
+}
+

@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+name="rust"
+version="1.74.0"
+description="Systems programming language from Mozilla"
+source="https://static.rust-lang.org/dist/rustc-$version-src.tar.gz"
+group="dev.lang"
+depends="curl,libssh,llvm"
+builddepend=""
+group="dev.lang"
+
+
+setup () {
+# disable strip
+dontstrip=1
+
+	cp -prvf $PACKAGEDIR/config.toml /tmp/bps/build/
+	cd $SOURCEDIR
+    install ../config.toml ./config.toml
+}
+
+build () {
+	sed -i "s/@verison@/"$version"/g" ./config.toml
+	python3 ./x.py build
+	}
+
+package () {
+	python3 ./x.py install
+    #python3 ./x.py install rustc std
+    #python3 ./x.py install --stage=1 cargo clippy rustfmt
+}
+
